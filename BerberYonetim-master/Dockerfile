@@ -1,29 +1,33 @@
-# ---------- BUILD STAGE ----------
+# syntax=docker/dockerfile:1
+
+# 1) Çalışma zamanı imajı
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+# İçeride 8080’i dinle
+ENV ASPNETCORE_URLS=http://+:8080
+
+# 2) Build imajı
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Sadece csproj'u kopyalayarak restore cache'ini doğru kullan
-COPY Berber/BerberYonetim/*.csproj Berber/BerberYonetim/
+# Yalnızca csproj'u kopyala ve restore et (cache için)
+COPY ["BerberYonetim/BerberYonetim.csproj", "BerberYonetim/"]
+RUN dotnet restore "BerberYonetim/BerberYonetim.csproj"
 
-# Gerekirse çözüm dosyan da varsa kopyalayabilirsin (opsiyonel)
-# COPY BerberYonetim.sln .
-
-RUN dotnet restore Berber/BerberYonetim/BerberYonetim.csproj
-
-# Şimdi tüm kaynak kodu kopyala
+# Tüm kaynak kodu kopyala
 COPY . .
+WORKDIR "/src/BerberYonetim"
 
-# Release publish
-RUN dotnet publish Berber/BerberYonetim/BerberYonetim.csproj -c Release -o /app/publish
+# Derle
+RUN dotnet build "BerberYonetim.csproj" -c Release -o /app/build
 
-# ---------- RUNTIME STAGE ----------
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+# 3) Publish
+FROM build AS publish
+RUN dotnet publish "BerberYonetim.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# 4) Final imaj
+FROM base AS final
 WORKDIR /app
-
-# Konteynerda 8080'i dinleyelim (HTTPS kullanmayacağız)
-ENV ASPNETCORE_URLS=http://+:8080
-EXPOSE 8080
-
-COPY --from=build /app/publish .
-# Giriş dll'ini çalıştır
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "BerberYonetim.dll"]
