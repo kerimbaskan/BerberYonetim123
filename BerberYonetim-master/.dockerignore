@@ -1,9 +1,0 @@
-bin/
-obj/
-.git/
-.github/
-**/*.user
-**/*.swp
-**/*.suo
-node_modules/
-
