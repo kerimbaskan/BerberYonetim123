@@ -1,0 +1,14 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: berberyonetim
+    ports:
+      - "8080:8080"   # host:container
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    # Eğer istersen hosttaki appsettings.Development.json'ı içeriye read-only bağlayabilirsin:
+    # volumes:
+    #   - ./BerberYonetim/appsettings.Development.json:/app/appsettings.Development.json:ro
