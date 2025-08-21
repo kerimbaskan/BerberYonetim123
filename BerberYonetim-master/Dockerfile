@@ -3,15 +3,15 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Sadece csproj + sln kopyala (cache verimli olsun)
-COPY BerberYonetim123.sln ./
-COPY BerberYonetim123/*.csproj ./BerberYonetim123/
+COPY BerberYonetim.sln ./
+COPY BerberYonetim/*.csproj ./BerberYonetim/
 
 # Restore
-RUN dotnet restore ./BerberYonetim123/BerberYonetim123.csproj
+RUN dotnet restore ./BerberYonetim/BerberYonetim.csproj
 
 # Kalan her şeyi kopyala ve publish et
 COPY . .
-RUN dotnet publish ./BerberYonetim123/BerberYonetim123.csproj -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish ./BerberYonetim/BerberYonetim.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 # ---------- RUNTIME STAGE ----------
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
@@ -23,4 +23,4 @@ ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
 # DLL adını projenin gerçek çıktısına göre bırak
-ENTRYPOINT ["dotnet", "BerberYonetim123.dll"]
+ENTRYPOINT ["dotnet", "BerberYonetim.dll"]
