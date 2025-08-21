@@ -2,25 +2,20 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Sadece csproj + sln kopyala (cache verimli olsun)
 COPY BerberYonetim.sln ./
-COPY BerberYonetim/*.csproj ./BerberYonetim/
+COPY BerberYonetim/*.csproj BerberYonetim/
+RUN dotnet restore BerberYonetim/BerberYonetim.csproj
 
-# Restore
-RUN dotnet restore ./BerberYonetim/BerberYonetim.csproj
-
-# Kalan her şeyi kopyala ve publish et
 COPY . .
-RUN dotnet publish ./BerberYonetim/BerberYonetim.csproj -c Release -o /app/publish /p:UseAppHost=false
-
+# ⬇️  ÖNEMLİ: SG'yi kapatan bayraklar
+RUN dotnet publish BerberYonetim/BerberYonetim.csproj -c Release -o /app/publish /p:UseAppHost=false \
+    -p:UseRazorSourceGenerator=false \
+    -p:RazorCompileOnBuild=false \
+    -p:RazorCompileOnPublish=false
 # ---------- RUNTIME STAGE ----------
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish ./
-
-# Konteyner içinde 8080'i dinle
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
-
-# DLL adını projenin gerçek çıktısına göre bırak
 ENTRYPOINT ["dotnet", "BerberYonetim.dll"]
